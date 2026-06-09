@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Le Local" />
+<meta name="theme-color" content="#0e0d0c" />
+<link rel="manifest" href="manifest.json" />
+<title>Le Local</title>
+<style>
+  :root{
+    --bg:#0e0d0c; --panel:#1a1815; --panel2:#211e1a; --line:#322d27;
+    --ink:#f3ede3; --mut:#9a9088; --amber:#e0913a; --amber-soft:#3a2c19;
+    --green:#7bbf8f; --red:#e06b6b; --blue:#5fb3c4;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    overscroll-behavior:none}
+  body{padding-bottom:env(safe-area-inset-bottom)}
+  button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+  input,select,textarea{font-family:inherit}
+  .cap{font-family:"Helvetica Neue",Arial,sans-serif;letter-spacing:.14em;
+    text-transform:uppercase;font-size:11px;font-weight:700;color:var(--mut)}
+  .h1{font-size:26px;font-weight:800;letter-spacing:-.02em}
+  .wrap{max-width:520px;margin:0 auto;min-height:100vh;
+    padding:calc(16px + env(safe-area-inset-top)) 16px 96px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:12px}
+  .row{display:flex;align-items:center;gap:12px}
+  .btn{background:var(--amber);color:#1a1208;font-weight:700;padding:13px 16px;
+    border-radius:12px;width:100%;font-size:15px}
+  .btn:active{transform:scale(.98)}
+  .btn.ghost{background:var(--panel2);color:var(--ink);border:1px solid var(--line)}
+  .btn.sm{width:auto;padding:8px 14px;font-size:13px;border-radius:10px}
+  .field{width:100%;background:var(--panel2);border:1px solid var(--line);
+    color:var(--ink);padding:13px;border-radius:12px;font-size:16px;margin-top:8px}
+  .pill{padding:6px 12px;border-radius:999px;border:1px solid var(--line);
+    background:var(--panel2);font-size:13px;font-weight:600}
+  .pill.on{background:var(--amber);color:#1a1208;border-color:var(--amber)}
+  .pill.yes{background:var(--green);color:#0e1a12;border-color:var(--green)}
+  .pill.no{background:var(--red);color:#1a0e0e;border-color:var(--red)}
+  .pill.maybe{background:var(--blue);color:#0e1a1d;border-color:var(--blue)}
+  .av{width:44px;height:44px;border-radius:12px;overflow:hidden;flex:0 0 auto;background:var(--panel2)}
+  .av svg{width:100%;height:100%;display:block}
+  .nav{position:fixed;bottom:0;left:0;right:0;background:rgba(20,18,16,.92);
+    backdrop-filter:blur(12px);border-top:1px solid var(--line);
+    display:flex;padding:8px 0 calc(8px + env(safe-area-inset-bottom));z-index:50}
+  .nav button{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;
+    color:var(--mut);font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+  .nav button.on{color:var(--amber)}
+  .nav svg{width:24px;height:24px}
+  .toast{position:fixed;left:50%;top:calc(14px + env(safe-area-inset-top));transform:translateX(-50%);
+    background:var(--amber);color:#1a1208;padding:11px 18px;border-radius:999px;
+    font-weight:700;font-size:14px;z-index:100;box-shadow:0 8px 30px rgba(0,0,0,.4);
+    max-width:90%;text-align:center}
+  .star{font-size:22px;color:var(--line);transition:color .1s}
+  .star.on{color:var(--amber)}
+  .seg{display:flex;gap:6px;flex-wrap:wrap}
+  .mem{display:flex;align-items:center;gap:8px;padding:8px;border-radius:10px;background:var(--panel2);margin-bottom:6px}
+  .badge{font-size:11px;font-weight:700;padding:2px 7px;border-radius:6px;background:var(--amber-soft);color:var(--amber)}
+  .gauge{height:6px;background:var(--line);border-radius:3px;overflow:hidden}
+  .gauge > div{height:100%;background:var(--amber)}
+  .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:80;display:flex;
+    align-items:flex-end;justify-content:center}
+  .modal{background:var(--panel);border:1px solid var(--line);border-radius:20px 20px 0 0;
+    width:100%;max-width:520px;padding:20px 16px calc(24px + env(safe-area-inset-bottom));
+    max-height:88vh;overflow:auto}
+  .avgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:10px}
+  .avgrid .av{width:100%;height:auto;aspect-ratio:1;border:2px solid transparent}
+  .avgrid .av.sel{border-color:var(--amber)}
+  .muted{color:var(--mut);font-size:13px}
+  .divider{height:1px;background:var(--line);margin:12px 0}
+  .tag{font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;text-transform:uppercase;letter-spacing:.05em}
+  .tag.prop{background:var(--amber-soft);color:var(--amber)}
+  .tag.conf{background:#1a2e20;color:var(--green)}
+  textarea.field{min-height:64px;resize:vertical}
+  .link{color:var(--amber);text-decoration:none;font-weight:600;font-size:13px}
+  .center{display:flex;align-items:center;justify-content:center;min-height:100vh;flex-direction:column;padding:24px;text-align:center}
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script type="text/babel" data-presets="react">
+const { useState, useEffect, useRef } = React;
+
+/* ============================================================
+   CONFIG SUPABASE — remplace ces deux valeurs (voir guide)
+   ============================================================ */
+const SUPABASE_URL = "https://xxxnnkxacogdcdwbedhu.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh4eG5ua3hhY29nZGNkd2JlZGh1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5NTA0MjAsImV4cCI6MjA5NjUyNjQyMH0.QjWIq-bpgYxZYM4Cm-ifK8nVKq47axVMQZutcgi7kDE";
+/* Ton id admin : mets ici l'id qui s'affiche dans ton profil
+   après ta 1re connexion, pour avoir les droits de suppression. */
+const ADMIN_IDS = [];
+
+const sb = (SUPABASE_URL.startsWith("http"))
+  ? supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+
+/* ---------- Avatars (SVG inline) ---------- */
+const AV = {
+  bass:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50" fill="#1f2a2e"/><g transform="translate(50,50) rotate(-30)"><rect x="-3" y="-42" width="6" height="46" rx="2" fill="#5fb3c4"/><ellipse cx="0" cy="16" rx="16" ry="20" fill="#7cc6d6"/><circle cx="0" cy="16" r="5" fill="#1f2a2e"/><rect x="-4" y="-44" width="8" height="6" rx="2" fill="#3a7a86"/></g></svg>',
+  guitar:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50" fill="#2a2420"/><g transform="translate(50,50) rotate(-30)"><rect x="-4" y="-38" width="8" height="40" rx="3" fill="#d9a441"/><ellipse cx="0" cy="14" rx="18" ry="22" fill="#e8b04d"/><circle cx="0" cy="14" r="7" fill="#2a2420"/><rect x="-5" y="-40" width="10" height="6" rx="2" fill="#8a6a2a"/></g></svg>',
+  drums:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50" fill="#2e2226"/><ellipse cx="50" cy="58" rx="28" ry="12" fill="#e06b6b"/><rect x="22" y="40" width="56" height="18" fill="#e06b6b"/><ellipse cx="50" cy="40" rx="28" ry="12" fill="#f2a0a0"/><line x1="30" y1="30" x2="22" y2="14" stroke="#cfcfcf" stroke-width="3"/><line x1="70" y1="30" x2="78" y2="14" stroke="#cfcfcf" stroke-width="3"/></svg>',
+  mic:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50" fill="#2a2433"/><rect x="40" y="20" width="20" height="38" rx="10" fill="#b18ad9"/><path d="M30 50 a20 20 0 0 0 40 0" fill="none" stroke="#b18ad9" stroke-width="4"/><line x1="50" y1="58" x2="50" y2="78" stroke="#b18ad9" stroke-width="4"/><rect x="38" y="78" width="24" height="5" rx="2" fill="#b18ad9"/></svg>',
+  keys:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50" fill="#26302a"/><rect x="22" y="34" width="56" height="32" rx="3" fill="#e8e8e8"/><rect x="22" y="34" width="56" height="32" rx="3" fill="none" stroke="#7bbf8f" stroke-width="3"/><g fill="#26302a"><rect x="30" y="34" width="5" height="20"/><rect x="40" y="34" width="5" height="20"/><rect x="55" y="34" width="5" height="20"/><rect x="65" y="34" width="5" height="20"/></g></svg>',
+  sax:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50" fill="#332a22"/><path d="M52 18 L52 50 Q52 70 38 72 Q26 72 28 60" fill="none" stroke="#e0a82e" stroke-width="7" stroke-linecap="round"/><circle cx="26" cy="58" r="9" fill="#e0a82e"/><g fill="#8a6a2a"><circle cx="52" cy="30" r="2.5"/><circle cx="52" cy="40" r="2.5"/><circle cx="52" cy="50" r="2.5"/></g></svg>',
+  vinyl:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50" fill="#222"/><circle cx="50" cy="50" r="34" fill="#111"/><circle cx="50" cy="50" r="34" fill="none" stroke="#444" stroke-width="1"/><circle cx="50" cy="50" r="26" fill="none" stroke="#444" stroke-width="1"/><circle cx="50" cy="50" r="18" fill="none" stroke="#444" stroke-width="1"/><circle cx="50" cy="50" r="11" fill="#e0613a"/><circle cx="50" cy="50" r="3" fill="#111"/></svg>'
+};
+const AV_KEYS = Object.keys(AV);
+function Avatar({k,cls}){ return <div className={"av "+(cls||"")} dangerouslySetInnerHTML={{__html:AV[k]||AV.vinyl}} />; }
+
+/* ---------- Icônes nav ---------- */
+const Ico = {
+  cal:<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>,
+  song:<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>,
+  prof:<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
+};
+
+/* ---------- Helpers ---------- */
+const uid = () => (crypto.randomUUID ? crypto.randomUUID() : Date.now()+"-"+Math.random());
+function useLocal(key,init){
+  const [v,setV]=useState(()=>{ try{const s=localStorage.getItem(key);return s?JSON.parse(s):init;}catch{return init;} });
+  useEffect(()=>{ try{localStorage.setItem(key,JSON.stringify(v));}catch{} },[key,v]);
+  return [v,setV];
+}
+const fmtDate = (iso)=>{ const d=new Date(iso);
+  return d.toLocaleDateString("fr-FR",{weekday:"short",day:"numeric",month:"short"})+" · "+
+         d.toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"}); };
+
+/* ============================================================ */
+function App(){
+  const [me,setMe] = useLocal("local_me",null);
+  const [tab,setTab] = useState("cal");
+  const [toast,setToast] = useState(null);
+  const [members,setMembers] = useState([]);
+  const [events,setEvents] = useState([]);
+  const [songs,setSongs] = useState([]);
+
+  const notify=(m)=>{ setToast(m); try{navigator.vibrate&&navigator.vibrate(20)}catch{}
+    setTimeout(()=>setToast(null),2600); };
+
+  // chargement + temps réel
+  async function loadAll(){
+    if(!sb) return;
+    const [{data:m},{data:e},{data:s}] = await Promise.all([
+      sb.from("members").select("*").order("created_at"),
+      sb.from("events").select("*").order("start_at"),
+      sb.from("songs").select("*").order("created_at",{ascending:false})
+    ]);
+    setMembers(m||[]); setEvents(e||[]); setSongs(s||[]);
+  }
+  useEffect(()=>{
+    if(!sb) return;
+    loadAll();
+    const ch = sb.channel("rt")
+      .on("postgres_changes",{event:"*",schema:"public",table:"members"},loadAll)
+      .on("postgres_changes",{event:"*",schema:"public",table:"events"},(p)=>{
+        loadAll();
+        if(p.eventType==="INSERT" && me && p.new){
+          const inv=p.new.invited||[];
+          if(p.new.author!==me.id && (inv.length===0||inv.includes(me.id))){
+            notify(p.new.kind==="prop"?"Nouveau créneau proposé 🗓️":"Répét' ajoutée 🥁");
+          }
+        }
+      })
+      .on("postgres_changes",{event:"*",schema:"public",table:"songs"},loadAll)
+      .subscribe();
+    return ()=> sb.removeChannel(ch);
+  },[me && me.id]);
+
+  if(!sb) return <ConfigScreen/>;
+  if(!me) return <Onboard onDone={async(p)=>{
+    const row={id:uid(),name:p.name,role:p.role,avatar:p.avatar,created_at:new Date().toISOString()};
+    await sb.from("members").insert(row); setMe(row); notify("Bienvenue "+p.name+" 👋");
+  }}/>;
+
+  const isAdmin = ADMIN_IDS.includes(me.id);
+
+  return (
+    <div className="wrap">
+      {toast && <div className="toast">{toast}</div>}
+      {tab==="cal"  && <Calendar me={me} members={members} events={events} reload={loadAll} notify={notify}/>}
+      {tab==="song" && <Songs me={me} members={members} songs={songs} reload={loadAll} notify={notify}/>}
+      {tab==="prof" && <Profile me={me} setMe={setMe} members={members} reload={loadAll}
+                                isAdmin={isAdmin} notify={notify}/>}
+      <nav className="nav">
+        <button className={tab==="cal"?"on":""} onClick={()=>setTab("cal")}>{Ico.cal}Agenda</button>
+        <button className={tab==="song"?"on":""} onClick={()=>setTab("song")}>{Ico.song}Sons</button>
+        <button className={tab==="prof"?"on":""} onClick={()=>setTab("prof")}>{Ico.prof}Profil</button>
+      </nav>
+    </div>
+  );
+}
+
+/* ---------- Écran config (si clés manquantes) ---------- */
+function ConfigScreen(){
+  return <div className="center">
+    <div className="h1" style={{marginBottom:12}}>Presque prêt</div>
+    <p className="muted" style={{maxWidth:340}}>
+      Il reste à coller ton URL et ta clé Supabase dans le fichier <b>index.html</b>
+      (en haut du script, <code>SUPABASE_URL</code> et <code>SUPABASE_KEY</code>).
+      Suis le guide fourni, ça prend 5 minutes.
+    </p>
+  </div>;
+}
+
+/* ---------- Onboarding ---------- */
+function Onboard({onDone}){
+  const [step,setStep]=useState(0);
+  const [name,setName]=useState("");
+  const [role,setRole]=useState("");
+  const [avatar,setAvatar]=useState(AV_KEYS[0]);
+  return <div className="center">
+    <Avatar k={avatar}/><div style={{height:14}}/>
+    <div className="h1">Le Local</div>
+    <p className="muted" style={{marginBottom:20}}>L'organisation du groupe, au même endroit.</p>
+    {step===0 && <div style={{width:"100%",maxWidth:360}}>
+      <div className="cap" style={{textAlign:"left"}}>Ton prénom</div>
+      <input className="field" value={name} placeholder="Ulysse"
+             onChange={e=>setName(e.target.value)} />
+      <div className="cap" style={{textAlign:"left",marginTop:14}}>Ton instrument / rôle</div>
+      <input className="field" value={role} placeholder="bassiste"
+             onChange={e=>setRole(e.target.value)} />
+      <div style={{height:16}}/>
+      <button className="btn" disabled={!name.trim()||!role.trim()}
+        style={{opacity:(name.trim()&&role.trim())?1:.5}}
+        onClick={()=>setStep(1)}>Choisir un avatar</button>
+    </div>}
+    {step===1 && <div style={{width:"100%",maxWidth:360}}>
+      <div className="cap" style={{textAlign:"left"}}>Ton avatar</div>
+      <div className="avgrid">
+        {AV_KEYS.map(k=><div key={k} onClick={()=>setAvatar(k)}>
+          <Avatar k={k} cls={avatar===k?"sel":""}/></div>)}
+      </div>
+      <div style={{height:16}}/>
+      <button className="btn" onClick={()=>onDone({name:name.trim(),role:role.trim(),avatar})}>
+        C'est parti</button>
+      <button className="btn ghost" style={{marginTop:8}} onClick={()=>setStep(0)}>Retour</button>
+    </div>}
+  </div>;
+}
+
+const who = (m)=> m ? `${m.name}, ${m.role}` : "—";
+
+/* ---------- AGENDA ---------- */
+function Calendar({me,members,events,reload,notify}){
+  const [open,setOpen]=useState(false);
+  return <div>
+    <div className="row" style={{justifyContent:"space-between",marginBottom:14}}>
+      <div><div className="cap">Le Local</div><div className="h1">Agenda</div></div>
+      <button className="btn sm" onClick={()=>setOpen(true)}>+ Créneau</button>
+    </div>
+    {events.length===0 && <div className="card"><p className="muted" style={{margin:0}}>
+      Rien de prévu. Propose un créneau pour voir qui peut venir.</p></div>}
+    {events.map(ev=><EventCard key={ev.id} ev={ev} me={me} members={members}
+                               reload={reload} notify={notify}/>)}
+    {open && <NewEvent me={me} members={members} onClose={()=>setOpen(false)}
+                       reload={reload} notify={notify}/>}
+  </div>;
+}
+
+function EventCard({ev,me,members,reload,notify}){
+  const inv = (ev.invited&&ev.invited.length)? ev.invited : members.map(m=>m.id);
+  const invMembers = members.filter(m=>inv.includes(m.id));
+  const resp = ev.responses||{};
+  const myr = resp[me.id];
+  const isInvited = inv.includes(me.id);
+  async function setResp(val){
+    const next={...resp,[me.id]:val};
+    await sb.from("events").update({responses:next}).eq("id",ev.id);
+    reload();
+  }
+  async function confirm(){
+    await sb.from("events").update({kind:"conf"}).eq("id",ev.id);
+    notify("Créneau confirmé ✅"); reload();
+  }
+  async function del(){ if(window.confirm("Supprimer ce créneau ?")){await sb.from("events").delete().eq("id",ev.id); reload();} }
+  const count=(v)=>invMembers.filter(m=>resp[m.id]===v).length;
+  const isAuthor = ev.author===me.id;
+  const author = members.find(m=>m.id===ev.author);
+  return <div className="card">
+    <div className="row" style={{justifyContent:"space-between"}}>
+      <span className={"tag "+(ev.kind==="prop"?"prop":"conf")}>
+        {ev.kind==="prop"?"Proposition":"Répét' confirmée"}</span>
+      {isAuthor && <button className="link" onClick={del}>Suppr.</button>}
+    </div>
+    <div style={{fontWeight:800,fontSize:17,marginTop:8}}>{fmtDate(ev.start_at)}</div>
+    {author && <div className="muted" style={{fontSize:12,marginTop:2}}>{ev.kind==="prop"?"Proposé":"Ajouté"} par {author.name}</div>}
+    {ev.place && <div className="muted" style={{marginTop:2}}>📍 {ev.place}</div>}
+    {ev.note && <div style={{marginTop:6,fontSize:14}}>{ev.note}</div>}
+    <div className="divider"/>
+    <div className="cap" style={{marginBottom:8}}>
+      {ev.kind==="prop"?"Qui serait dispo ?":"Présences"} ·
+      <span style={{color:"var(--green)"}}> {count("yes")} oui</span> ·
+      <span style={{color:"var(--blue)"}}> {count("maybe")} ptêt</span> ·
+      <span style={{color:"var(--red)"}}> {count("no")} non</span>
+    </div>
+    {invMembers.map(m=>{
+      const r=resp[m.id];
+      return <div className="mem" key={m.id}>
+        <Avatar k={m.avatar}/>
+        <div style={{flex:1}}><div style={{fontWeight:700,fontSize:14}}>{m.name}</div>
+          <div className="muted" style={{fontSize:12}}>{m.role}</div></div>
+        {r==="yes"&&<span className="pill yes">Oui</span>}
+        {r==="maybe"&&<span className="pill maybe">Peut-être</span>}
+        {r==="no"&&<span className="pill no">Non</span>}
+        {!r&&<span className="muted" style={{fontSize:12}}>—</span>}
+      </div>;
+    })}
+    {isInvited && <div style={{marginTop:12}}>
+      <div className="cap" style={{marginBottom:6}}>Ta réponse</div>
+      <div className="seg">
+        <button className={"pill "+(myr==="yes"?"yes":"")} onClick={()=>setResp("yes")}>Dispo</button>
+        <button className={"pill "+(myr==="maybe"?"maybe":"")} onClick={()=>setResp("maybe")}>Peut-être</button>
+        <button className={"pill "+(myr==="no"?"no":"")} onClick={()=>setResp("no")}>Pas dispo</button>
+      </div>
+    </div>}
+    {isAuthor && ev.kind==="prop" && <button className="btn" style={{marginTop:12}}
+      onClick={confirm}>Confirmer cette répét'</button>}
+  </div>;
+}
+
+function NewEvent({me,members,onClose,reload,notify}){
+  const [kind,setKind]=useState("prop");
+  const [date,setDate]=useState("");
+  const [place,setPlace]=useState("");
+  const [note,setNote]=useState("");
+  const [invited,setInvited]=useState(members.map(m=>m.id)); // tous précochés
+  const toggle=(id)=> setInvited(v=> v.includes(id)? v.filter(x=>x!==id) : [...v,id]);
+  async function save(){
+    if(!date) return;
+    await sb.from("events").insert({
+      id:uid(), kind, start_at:new Date(date).toISOString(),
+      place:place.trim(), note:note.trim(),
+      author:me.id, invited, responses:{}, created_at:new Date().toISOString()
+    });
+    notify(kind==="prop"?"Créneau proposé":"Répét' ajoutée"); onClose(); reload();
+  }
+  return <div className="modal-bg" onClick={onClose}>
+    <div className="modal" onClick={e=>e.stopPropagation()}>
+      <div className="h1" style={{fontSize:20,marginBottom:14}}>Nouveau créneau</div>
+      <div className="seg" style={{marginBottom:14}}>
+        <button className={"pill "+(kind==="prop"?"on":"")} onClick={()=>setKind("prop")}>Proposition</button>
+        <button className={"pill "+(kind==="conf"?"on":"")} onClick={()=>setKind("conf")}>Répét' confirmée</button>
+      </div>
+      <div className="cap">Date & heure</div>
+      <input className="field" type="datetime-local" value={date} onChange={e=>setDate(e.target.value)}/>
+      <div className="cap" style={{marginTop:12}}>Lieu</div>
+      <input className="field" value={place} placeholder="Studio, garage, salle…"
+             onChange={e=>setPlace(e.target.value)}/>
+      <div className="cap" style={{marginTop:12}}>Note (optionnel)</div>
+      <textarea className="field" value={note} placeholder="Ramener les câbles, etc."
+                onChange={e=>setNote(e.target.value)}/>
+      <div className="cap" style={{marginTop:14,marginBottom:6}}>Inviter (tous cochés par défaut)</div>
+      {members.map(m=><div className="mem" key={m.id} onClick={()=>toggle(m.id)}>
+        <Avatar k={m.avatar}/>
+        <div style={{flex:1}}><div style={{fontWeight:700,fontSize:14}}>{m.name}</div>
+          <div className="muted" style={{fontSize:12}}>{m.role}</div></div>
+        <span className={"pill "+(invited.includes(m.id)?"on":"")}>
+          {invited.includes(m.id)?"Invité":"Hors"}</span>
+      </div>)}
+      <div style={{height:16}}/>
+      <button className="btn" disabled={!date} style={{opacity:date?1:.5}} onClick={save}>
+        {kind==="prop"?"Proposer le créneau":"Ajouter la répét'"}</button>
+      <button className="btn ghost" style={{marginTop:8}} onClick={onClose}>Annuler</button>
+    </div>
+  </div>;
+}
+
+/* ---------- SONS ---------- */
+function Songs({me,members,songs,reload,notify}){
+  const [open,setOpen]=useState(false);
+  return <div>
+    <div className="row" style={{justifyContent:"space-between",marginBottom:14}}>
+      <div><div className="cap">Le Local</div><div className="h1">Sons</div></div>
+      <button className="btn sm" onClick={()=>setOpen(true)}>+ Proposer</button>
+    </div>
+    {songs.length===0 && <div className="card"><p className="muted" style={{margin:0}}>
+      Aucune suggestion. Propose un morceau à bosser.</p></div>}
+    {songs.map(s=><SongCard key={s.id} s={s} me={me} members={members} reload={reload}/>)}
+    {open && <NewSong me={me} onClose={()=>setOpen(false)} reload={reload} notify={notify}/>}
+  </div>;
+}
+
+function SongCard({s,me,members,reload}){
+  const author = members.find(m=>m.id===s.author);
+  const ratings=s.ratings||{};
+  const vals=Object.values(ratings);
+  const avg=vals.length? (vals.reduce((a,b)=>a+b,0)/vals.length) : 0;
+  const mine=ratings[me.id]||0;
+  const [cmt,setCmt]=useState("");
+  const [showVotes,setShowVotes]=useState(false);
+  async function rate(n){
+    const next={...ratings,[me.id]:n};
+    await sb.from("songs").update({ratings:next}).eq("id",s.id); reload();
+  }
+  async function addComment(){
+    if(!cmt.trim()) return;
+    const next=[...(s.comments||[]),{id:uid(),author:me.id,name:me.name,role:me.role,text:cmt.trim(),at:new Date().toISOString()}];
+    await sb.from("songs").update({comments:next}).eq("id",s.id); setCmt(""); reload();
+  }
+  async function del(){ if(window.confirm("Supprimer cette suggestion ?")){ await sb.from("songs").delete().eq("id",s.id); reload(); } }
+  return <div className="card">
+    <div className="row" style={{justifyContent:"space-between"}}>
+      <div style={{flex:1}}>
+        <div style={{fontWeight:800,fontSize:16}}>{s.title}</div>
+        {s.artist && <div className="muted">{s.artist}</div>}
+        {author && <div className="muted" style={{fontSize:12,marginTop:3}}>Suggéré par {author.name}</div>}
+      </div>
+      {s.author===me.id && <button className="link" onClick={del}>Suppr.</button>}
+    </div>
+    {s.url && <a className="link" href={s.url} target="_blank" rel="noreferrer">▶ Écouter</a>}
+    <div className="divider"/>
+    <div className="row" style={{justifyContent:"space-between",cursor:"pointer"}}
+         onClick={()=>vals.length&&setShowVotes(v=>!v)}>
+      <div className="cap">Note du groupe {vals.length>0 && <span style={{color:"var(--amber)"}}>{showVotes?"▲":"▼"}</span>}</div>
+      <div style={{fontWeight:800}}>{avg? avg.toFixed(1):"—"}
+        <span className="muted" style={{fontWeight:400,fontSize:12}}> / 5 · {vals.length} vote{vals.length>1?"s":""}</span></div>
+    </div>
+    {showVotes && <div style={{marginTop:8}}>
+      {members.filter(m=>ratings[m.id]).map(m=><div className="row" key={m.id}
+          style={{justifyContent:"space-between",padding:"4px 0"}}>
+        <span style={{fontSize:13,fontWeight:600}}>{m.name}, {m.role}</span>
+        <span style={{color:"var(--amber)",fontSize:14}}>{"★".repeat(ratings[m.id])}<span style={{color:"var(--line)"}}>{"★".repeat(5-ratings[m.id])}</span></span>
+      </div>)}
+    </div>}
+    <div style={{marginTop:6}}>
+      {[1,2,3,4,5].map(n=><span key={n} className={"star "+(n<=mine?"on":"")}
+        onClick={()=>rate(n)}>★</span>)}
+      <span className="muted" style={{fontSize:12,marginLeft:8}}>ta note</span>
+    </div>
+    <div className="divider"/>
+    <div className="cap" style={{marginBottom:6}}>Avis ({(s.comments||[]).length})</div>
+    {(s.comments||[]).map(c=><div key={c.id} style={{marginBottom:8}}>
+      <span style={{fontWeight:700,fontSize:13}}>{c.name}, {c.role}</span>
+      <div style={{fontSize:14}}>{c.text}</div></div>)}
+    <div className="row" style={{gap:8,marginTop:8}}>
+      <input className="field" style={{marginTop:0}} value={cmt} placeholder="Ton avis…"
+             onChange={e=>setCmt(e.target.value)} onKeyDown={e=>e.key==="Enter"&&addComment()}/>
+      <button className="btn sm" onClick={addComment}>Envoyer</button>
+    </div>
+  </div>;
+}
+
+function NewSong({me,onClose,reload,notify}){
+  const [title,setTitle]=useState(""),[artist,setArtist]=useState(""),[url,setUrl]=useState("");
+  async function save(){
+    if(!title.trim()) return;
+    await sb.from("songs").insert({id:uid(),title:title.trim(),artist:artist.trim(),
+      url:url.trim(),author:me.id,ratings:{},comments:[],created_at:new Date().toISOString()});
+    notify("Son proposé 🎵"); onClose(); reload();
+  }
+  return <div className="modal-bg" onClick={onClose}>
+    <div className="modal" onClick={e=>e.stopPropagation()}>
+      <div className="h1" style={{fontSize:20,marginBottom:14}}>Proposer un son</div>
+      <div className="cap">Titre</div>
+      <input className="field" value={title} placeholder="Sweet Child O' Mine" onChange={e=>setTitle(e.target.value)}/>
+      <div className="cap" style={{marginTop:12}}>Artiste</div>
+      <input className="field" value={artist} placeholder="Guns N' Roses" onChange={e=>setArtist(e.target.value)}/>
+      <div className="cap" style={{marginTop:12}}>Lien (YouTube / Spotify, optionnel)</div>
+      <input className="field" value={url} placeholder="https://…" onChange={e=>setUrl(e.target.value)}/>
+      <div style={{height:16}}/>
+      <button className="btn" disabled={!title.trim()} style={{opacity:title.trim()?1:.5}} onClick={save}>Proposer</button>
+      <button className="btn ghost" style={{marginTop:8}} onClick={onClose}>Annuler</button>
+    </div>
+  </div>;
+}
+
+/* ---------- PROFIL ---------- */
+function Profile({me,setMe,members,reload,isAdmin,notify}){
+  const [name,setName]=useState(me.name),[role,setRole]=useState(me.role),[avatar,setAvatar]=useState(me.avatar);
+  const dirty = name!==me.name||role!==me.role||avatar!==me.avatar;
+  async function save(){
+    await sb.from("members").update({name:name.trim(),role:role.trim(),avatar}).eq("id",me.id);
+    const next={...me,name:name.trim(),role:role.trim(),avatar}; setMe(next);
+    notify("Profil mis à jour"); reload();
+  }
+  async function removeMember(id){
+    if(window.confirm("Retirer ce membre du groupe ?")){
+      await sb.from("members").delete().eq("id",id); reload();
+    }
+  }
+  return <div>
+    <div className="cap">Le Local</div><div className="h1" style={{marginBottom:14}}>Profil</div>
+    <div className="card">
+      <div className="row"><Avatar k={avatar}/>
+        <div><div style={{fontWeight:800,fontSize:17}}>{me.name}, {me.role}</div>
+          <div className="muted" style={{fontSize:11,wordBreak:"break-all"}}>id : {me.id}</div>
+          <button className="link" style={{padding:0,marginTop:2}}
+            onClick={()=>{navigator.clipboard&&navigator.clipboard.writeText(me.id);notify("Id copié");}}>
+            Copier mon id</button></div></div>
+      <div className="cap" style={{marginTop:16}}>Avatar</div>
+      <div className="avgrid">
+        {AV_KEYS.map(k=><div key={k} onClick={()=>setAvatar(k)}>
+          <Avatar k={k} cls={avatar===k?"sel":""}/></div>)}
+      </div>
+      <div className="cap" style={{marginTop:14}}>Prénom</div>
+      <input className="field" value={name} onChange={e=>setName(e.target.value)}/>
+      <div className="cap" style={{marginTop:12}}>Instrument / rôle</div>
+      <input className="field" value={role} onChange={e=>setRole(e.target.value)}/>
+      <div style={{height:14}}/>
+      <button className="btn" disabled={!dirty||!name.trim()||!role.trim()}
+        style={{opacity:(dirty&&name.trim()&&role.trim())?1:.5}} onClick={save}>Enregistrer</button>
+    </div>
+    <div className="card">
+      <div className="cap" style={{marginBottom:8}}>Le groupe · {members.length} membre{members.length>1?"s":""}</div>
+      {members.map(m=><div className="mem" key={m.id}>
+        <Avatar k={m.avatar}/>
+        <div style={{flex:1}}><div style={{fontWeight:700,fontSize:14}}>{m.name}, {m.role}
+          {m.id===me.id && <span className="badge" style={{marginLeft:6}}>toi</span>}</div></div>
+        {isAdmin && m.id!==me.id &&
+          <button className="link" onClick={()=>removeMember(m.id)}>Retirer</button>}
+      </div>)}
+      {!isAdmin && <p className="muted" style={{fontSize:12,margin:"8px 0 0"}}>
+        Seul l'admin peut retirer des membres.</p>}
+    </div>
+  </div>;
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
