@@ -179,8 +179,7 @@ function App(){
       .on("postgres_changes",{event:"*",schema:"public",table:"events"},(p)=>{
         loadAll();
         if(p.eventType==="INSERT" && me && p.new){
-          const inv=p.new.invited||[];
-          if(p.new.author!==me.id && (inv.length===0||inv.includes(me.id))){
+          if(p.new.author!==me.id){
             notify(p.new.kind==="prop"?"Nouveau créneau proposé 🗓️":"Répét' ajoutée 🥁");
           }
         }
@@ -288,11 +287,9 @@ function Calendar({me,members,events,reload,notify,isAdmin}){
 }
 
 function EventCard({ev,me,members,reload,notify,isAdmin}){
-  const inv = (ev.invited&&ev.invited.length)? ev.invited : members.map(m=>m.id);
-  const invMembers = members.filter(m=>inv.includes(m.id));
+  const invMembers = members;
   const resp = ev.responses||{};
   const myr = resp[me.id];
-  const isInvited = inv.includes(me.id);
   async function setResp(val){
     const next={...resp,[me.id]:val};
     await sb.from("events").update({responses:next}).eq("id",ev.id);
@@ -340,7 +337,7 @@ function EventCard({ev,me,members,reload,notify,isAdmin}){
         {!r&&<span className="muted" style={{fontSize:12}}>—</span>}
       </div>;
     })}
-    {isInvited && <div style={{marginTop:12}}>
+    {<div style={{marginTop:12}}>
       <div className="cap" style={{marginBottom:6}}>Ta réponse</div>
       <div className="seg">
         <button className={"pill "+(myr==="yes"?"yes":"")} onClick={()=>setResp("yes")}>Dispo</button>
@@ -358,14 +355,12 @@ function NewEvent({me,members,onClose,reload,notify}){
   const [date,setDate]=useState("");
   const [place,setPlace]=useState("");
   const [note,setNote]=useState("");
-  const [invited,setInvited]=useState(members.map(m=>m.id)); // tous précochés
-  const toggle=(id)=> setInvited(v=> v.includes(id)? v.filter(x=>x!==id) : [...v,id]);
   async function save(){
     if(!date) return;
     await sb.from("events").insert({
       id:uid(), kind, start_at:new Date(date).toISOString(),
       place:place.trim(), note:note.trim(),
-      author:me.id, invited, responses:{}, created_at:new Date().toISOString()
+      author:me.id, responses:{}, created_at:new Date().toISOString()
     });
     notify(kind==="prop"?"Créneau proposé":"Répét' ajoutée"); onClose(); reload();
   }
@@ -384,14 +379,6 @@ function NewEvent({me,members,onClose,reload,notify}){
       <div className="cap" style={{marginTop:12}}>Note (optionnel)</div>
       <textarea className="field" value={note} placeholder="Ramener les câbles, etc."
                 onChange={e=>setNote(e.target.value)}/>
-      <div className="cap" style={{marginTop:14,marginBottom:6}}>Inviter (tous cochés par défaut)</div>
-      {members.map(m=><div className="mem" key={m.id} onClick={()=>toggle(m.id)}>
-        <Avatar k={m.avatar} color={m.color}/>
-        <div style={{flex:1}}><div style={{fontWeight:700,fontSize:14}}>{m.name}</div>
-          <div className="muted" style={{fontSize:12}}>{m.role}</div></div>
-        <span className={"pill "+(invited.includes(m.id)?"on":"")}>
-          {invited.includes(m.id)?"Invité":"Hors"}</span>
-      </div>)}
       <div style={{height:16}}/>
       <button className="btn" disabled={!date} style={{opacity:date?1:.5}} onClick={save}>
         {kind==="prop"?"Proposer le créneau":"Ajouter la répét'"}</button>
