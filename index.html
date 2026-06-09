@@ -186,8 +186,8 @@ function App(){
   return (
     <div className="wrap">
       {toast && <div className="toast">{toast}</div>}
-      {tab==="cal"  && <Calendar me={me} members={members} events={events} reload={loadAll} notify={notify}/>}
-      {tab==="song" && <Songs me={me} members={members} songs={songs} reload={loadAll} notify={notify}/>}
+      {tab==="cal"  && <Calendar me={me} members={members} events={events} reload={loadAll} notify={notify} isAdmin={isAdmin}/>}
+      {tab==="song" && <Songs me={me} members={members} songs={songs} reload={loadAll} notify={notify} isAdmin={isAdmin}/>}
       {tab==="prof" && <Profile me={me} setMe={setMe} members={members} reload={loadAll}
                                 isAdmin={isAdmin} notify={notify}/>}
       <nav className="nav">
@@ -250,7 +250,7 @@ function Onboard({onDone}){
 const who = (m)=> m ? `${m.name}, ${m.role}` : "—";
 
 /* ---------- AGENDA ---------- */
-function Calendar({me,members,events,reload,notify}){
+function Calendar({me,members,events,reload,notify,isAdmin}){
   const [open,setOpen]=useState(false);
   return <div>
     <div className="row" style={{justifyContent:"space-between",marginBottom:14}}>
@@ -260,13 +260,13 @@ function Calendar({me,members,events,reload,notify}){
     {events.length===0 && <div className="card"><p className="muted" style={{margin:0}}>
       Rien de prévu. Propose un créneau pour voir qui peut venir.</p></div>}
     {events.map(ev=><EventCard key={ev.id} ev={ev} me={me} members={members}
-                               reload={reload} notify={notify}/>)}
+                               reload={reload} notify={notify} isAdmin={isAdmin}/>)}
     {open && <NewEvent me={me} members={members} onClose={()=>setOpen(false)}
                        reload={reload} notify={notify}/>}
   </div>;
 }
 
-function EventCard({ev,me,members,reload,notify}){
+function EventCard({ev,me,members,reload,notify,isAdmin}){
   const inv = (ev.invited&&ev.invited.length)? ev.invited : members.map(m=>m.id);
   const invMembers = members.filter(m=>inv.includes(m.id));
   const resp = ev.responses||{};
@@ -285,14 +285,17 @@ function EventCard({ev,me,members,reload,notify}){
   const count=(v)=>invMembers.filter(m=>resp[m.id]===v).length;
   const isAuthor = ev.author===me.id;
   const author = members.find(m=>m.id===ev.author);
+  const orphan = !author;
+  const canDelete = isAuthor || (isAdmin && orphan);
   return <div className="card">
     <div className="row" style={{justifyContent:"space-between"}}>
       <span className={"tag "+(ev.kind==="prop"?"prop":"conf")}>
         {ev.kind==="prop"?"Proposition":"Répét' confirmée"}</span>
-      {isAuthor && <button className="link" onClick={del}>Suppr.</button>}
+      {canDelete && <button className="link" onClick={del}>Suppr.</button>}
     </div>
     <div style={{fontWeight:800,fontSize:17,marginTop:8}}>{fmtDate(ev.start_at)}</div>
     {author && <div className="muted" style={{fontSize:12,marginTop:2}}>{ev.kind==="prop"?"Proposé":"Ajouté"} par {author.name}</div>}
+    {orphan && <div className="muted" style={{fontSize:12,marginTop:2,fontStyle:"italic"}}>Auteur parti du groupe</div>}
     {ev.place && <div className="muted" style={{marginTop:2}}>📍 {ev.place}</div>}
     {ev.note && <div style={{marginTop:6,fontSize:14}}>{ev.note}</div>}
     <div className="divider"/>
@@ -375,7 +378,7 @@ function NewEvent({me,members,onClose,reload,notify}){
 }
 
 /* ---------- SONS ---------- */
-function Songs({me,members,songs,reload,notify}){
+function Songs({me,members,songs,reload,notify,isAdmin}){
   const [open,setOpen]=useState(false);
   return <div>
     <div className="row" style={{justifyContent:"space-between",marginBottom:14}}>
@@ -384,13 +387,15 @@ function Songs({me,members,songs,reload,notify}){
     </div>
     {songs.length===0 && <div className="card"><p className="muted" style={{margin:0}}>
       Aucune suggestion. Propose un morceau à bosser.</p></div>}
-    {songs.map(s=><SongCard key={s.id} s={s} me={me} members={members} reload={reload}/>)}
+    {songs.map(s=><SongCard key={s.id} s={s} me={me} members={members} reload={reload} isAdmin={isAdmin}/>)}
     {open && <NewSong me={me} onClose={()=>setOpen(false)} reload={reload} notify={notify}/>}
   </div>;
 }
 
-function SongCard({s,me,members,reload}){
+function SongCard({s,me,members,reload,isAdmin}){
   const author = members.find(m=>m.id===s.author);
+  const orphan = !author;
+  const canDelete = s.author===me.id || (isAdmin && orphan);
   const ratings=s.ratings||{};
   const vals=Object.values(ratings);
   const avg=vals.length? (vals.reduce((a,b)=>a+b,0)/vals.length) : 0;
@@ -413,8 +418,9 @@ function SongCard({s,me,members,reload}){
         <div style={{fontWeight:800,fontSize:16}}>{s.title}</div>
         {s.artist && <div className="muted">{s.artist}</div>}
         {author && <div className="muted" style={{fontSize:12,marginTop:3}}>Suggéré par {author.name}</div>}
+        {orphan && <div className="muted" style={{fontSize:12,marginTop:3,fontStyle:"italic"}}>Auteur parti du groupe</div>}
       </div>
-      {s.author===me.id && <button className="link" onClick={del}>Suppr.</button>}
+      {canDelete && <button className="link" onClick={del}>Suppr.</button>}
     </div>
     {s.url && <a className="link" href={s.url} target="_blank" rel="noreferrer">▶ Écouter</a>}
     <div className="divider"/>
