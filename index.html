@@ -98,7 +98,7 @@ const SUPABASE_URL = "https://xxxnnkxacogdcdwbedhu.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh4eG5ua3hhY29nZGNkd2JlZGh1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5NTA0MjAsImV4cCI6MjA5NjUyNjQyMH0.QjWIq-bpgYxZYM4Cm-ifK8nVKq47axVMQZutcgi7kDE";
 /* Ton id admin : mets ici l'id qui s'affiche dans ton profil
    après ta 1re connexion, pour avoir les droits de suppression. */
-const ADMIN_IDS = [];
+const ADMIN_IDS = ["c96a4750-a29f-40d0-b019-15cf01a4554f"];
 
 const sb = (SUPABASE_URL.startsWith("http"))
   ? supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
