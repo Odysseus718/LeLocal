@@ -44,6 +44,8 @@
   .pill.maybe{background:var(--blue);color:#0e1a1d;border-color:var(--blue)}
   .av{width:44px;height:44px;border-radius:12px;overflow:hidden;flex:0 0 auto;background:var(--panel2);display:flex;align-items:center;justify-content:center}
   .av img{width:84%;height:84%;object-fit:contain;display:block}
+  .av.round{border-radius:50%}
+  .av.sm{width:28px;height:28px}
   .nav{position:fixed;bottom:0;left:0;right:0;background:rgba(20,18,16,.92);
     backdrop-filter:blur(12px);border-top:1px solid var(--line);
     display:flex;padding:8px 0 calc(8px + env(safe-area-inset-bottom));z-index:50}
@@ -313,7 +315,9 @@ function EventCard({ev,me,members,reload,notify,isAdmin}){
       {canDelete && <button className="link" onClick={del}>Suppr.</button>}
     </div>
     <div style={{fontWeight:800,fontSize:17,marginTop:8}}>{fmtDate(ev.start_at)}</div>
-    {author && <div className="muted" style={{fontSize:12,marginTop:2}}>{ev.kind==="prop"?"Proposé":"Ajouté"} par {author.name}</div>}
+    {author && <div className="row" style={{gap:6,marginTop:3}}>
+      <Avatar k={author.avatar} color={author.color}/>
+      <span className="muted" style={{fontSize:12}}>{ev.kind==="prop"?"Proposé":"Ajouté"} par {author.name}</span></div>}
     {orphan && <div className="muted" style={{fontSize:12,marginTop:2,fontStyle:"italic"}}>Auteur parti du groupe</div>}
     {ev.place && <div className="muted" style={{marginTop:2}}>📍 {ev.place}</div>}
     {ev.note && <div style={{marginTop:6,fontSize:14}}>{ev.note}</div>}
@@ -436,7 +440,9 @@ function SongCard({s,me,members,reload,isAdmin}){
       <div style={{flex:1}}>
         <div style={{fontWeight:800,fontSize:16}}>{s.title}</div>
         {s.artist && <div className="muted">{s.artist}</div>}
-        {author && <div className="muted" style={{fontSize:12,marginTop:3}}>Suggéré par {author.name}</div>}
+        {author && <div className="row" style={{gap:6,marginTop:4}}>
+          <Avatar k={author.avatar} color={author.color}/>
+          <span className="muted" style={{fontSize:12}}>Suggéré par {author.name}</span></div>}
         {orphan && <div className="muted" style={{fontSize:12,marginTop:3,fontStyle:"italic"}}>Auteur parti du groupe</div>}
       </div>
       {canDelete && <button className="link" onClick={del}>Suppr.</button>}
@@ -463,9 +469,17 @@ function SongCard({s,me,members,reload,isAdmin}){
     </div>
     <div className="divider"/>
     <div className="cap" style={{marginBottom:6}}>Avis ({(s.comments||[]).length})</div>
-    {(s.comments||[]).map(c=><div key={c.id} style={{marginBottom:8}}>
-      <span style={{fontWeight:700,fontSize:13}}>{c.name}, {c.role}</span>
-      <div style={{fontSize:14}}>{c.text}</div></div>)}
+    {(s.comments||[]).map(c=>{
+      const cm=members.find(m=>m.id===c.author);
+      const nom=cm?cm.name:c.name, rol=cm?cm.role:c.role;
+      return <div key={c.id} className="row" style={{alignItems:"flex-start",gap:8,marginBottom:8}}>
+        {cm && <Avatar k={cm.avatar} color={cm.color}/>}
+        <div style={{flex:1}}>
+          <span style={{fontWeight:700,fontSize:13}}>{nom}, {rol}</span>
+          <div style={{fontSize:14}}>{c.text}</div>
+        </div>
+      </div>;
+    })}
     <div className="row" style={{gap:8,marginTop:8}}>
       <input className="field" style={{marginTop:0}} value={cmt} placeholder="Ton avis…"
              onChange={e=>setCmt(e.target.value)} onKeyDown={e=>e.key==="Enter"&&addComment()}/>
