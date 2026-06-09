@@ -403,14 +403,38 @@ function NewEvent({me,members,onClose,reload,notify}){
 /* ---------- SONS ---------- */
 function Songs({me,members,songs,reload,notify,isAdmin}){
   const [open,setOpen]=useState(false);
+  const [sort,setSort]=useState("note_desc");
+  const nameOf=(id)=>{const m=members.find(x=>x.id===id);return m?m.name.toLowerCase():"";};
+  const avgOf=(s)=>{const v=Object.values(s.ratings||{});return v.length?v.reduce((a,b)=>a+b,0)/v.length:-1;};
+  const sorted=[...songs].sort((a,b)=>{
+    switch(sort){
+      case "note_desc": return avgOf(b)-avgOf(a);
+      case "note_asc":  return avgOf(a)-avgOf(b);
+      case "titre":     return (a.title||"").localeCompare(b.title||"","fr",{sensitivity:"base"});
+      case "auteur":    return nameOf(a.author).localeCompare(nameOf(b.author),"fr",{sensitivity:"base"});
+      case "recent":    return new Date(b.created_at)-new Date(a.created_at);
+      case "ancien":    return new Date(a.created_at)-new Date(b.created_at);
+      default: return 0;
+    }
+  });
   return <div>
     <div className="row" style={{justifyContent:"space-between",marginBottom:14}}>
       <div><div className="cap">Le Local</div><div className="h1">Sons</div></div>
       <button className="btn sm" onClick={()=>setOpen(true)}>+ Proposer</button>
     </div>
+    {songs.length>1 && <div style={{marginBottom:12}}>
+      <select className="field" style={{marginTop:0}} value={sort} onChange={e=>setSort(e.target.value)}>
+        <option value="note_desc">Tri : mieux notés</option>
+        <option value="note_asc">Tri : moins bien notés</option>
+        <option value="titre">Tri : titre (A→Z)</option>
+        <option value="auteur">Tri : auteur de la suggestion (A→Z)</option>
+        <option value="recent">Tri : plus récents</option>
+        <option value="ancien">Tri : plus anciens</option>
+      </select>
+    </div>}
     {songs.length===0 && <div className="card"><p className="muted" style={{margin:0}}>
       Aucune suggestion. Propose un morceau à bosser.</p></div>}
-    {songs.map(s=><SongCard key={s.id} s={s} me={me} members={members} reload={reload} isAdmin={isAdmin}/>)}
+    {sorted.map(s=><SongCard key={s.id} s={s} me={me} members={members} reload={reload} isAdmin={isAdmin}/>)}
     {open && <NewSong me={me} onClose={()=>setOpen(false)} reload={reload} notify={notify}/>}
   </div>;
 }
